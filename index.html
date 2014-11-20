@@ -15,24 +15,21 @@
                 margin:0;
                 background-color: #eee;
             }
-            .mysterybox {
+            .mysterybox, .mysterybox2 {
                 position:absolute;
-                width: 306px;
+                width: 303px;
                 height: 306px;
                 top:50%;
                 left:50%;
                 margin-top:-175px;
                 margin-left:-150px;
-                padding:2px 1px 2px 4px;
+                padding:1px 3px 2px 4px;
 
                 border:1px solid #aaa;
                 background-color:#fafafa;
-                word-wrap: break-word;
-
-                font-family: "Courier New", Courier, monospace;
-                font-size:14px;
-                line-height:17px;
-                font-weight:normal;
+            }
+            .mysterybox2 {
+                margin-top:175px;
             }
         </style>
 
@@ -43,12 +40,26 @@
         <script src="mysterybox.js"></script>
         <script>
 
-            var mb = window.MYSTERYBOX({
-                message: "These are times that try men's souls!",
-                domElmId: "mysterybox"
-            });
-            mb.init("This ain't funny so don't")
-            window.onload = function() { mb.updateChar(true); }
+            var mb = new window.MYSTERYBOX({
+                    message: "These are times that try men's souls!",
+                    domElmId: "mysterybox"
+                }),
+                box = document.getElementById("mysterybox");
+
+            box.addEventListener('mb_allCharsUpdated', function (e) {
+                mb.init("This ain't funny so don't you dare laugh.")
+            }, false);
+
+            /* loop forever!! */
+            box.addEventListener('mb_init', function (e) {
+                mb.updateChar(true);
+            }, false);
+
+            window.onload = function() {
+                mb.updateChar(true);
+            }
+
+
 
 
         </script>
