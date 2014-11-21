@@ -36,6 +36,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
             elmDimension = {'x':0,'y':0};
 
         this.options = {
+            msgLineMaxWidth: 80,
             cssText: "font-family: \"Courier New\", Courier, monospace;font-size:14px;line-height:17px;font-weight:normal;",
             charWidth: 8.4,
             charHeight: 17,
@@ -57,7 +58,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
             this.domElm = document.getElementById(this.options.domElmId);
         }
 
-        this.domElm.style.cssText += "word-wrap: break-word;";
+        this.domElm.style.cssText += "display:block;unicode-bidi:embed;white-space:pre;word-wrap: break-word;font-family:monospace;";
         this.domElm.style.cssText += this.options.cssText;
 
         elmStyle = window.getComputedStyle(this.domElm);
@@ -82,20 +83,48 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
         if (msg !== undefined) {
             this.msg = msg;
         }
-        this.initRandom();
+        this.domElm.innerHTML = this.getRandom();
         this.populateBuffer();
 
         this.trigger("mb_init");
     }
 
-    box.prototype.initRandom = function() {
-        this.domElm.innerHTML = "";
+    box.prototype.getRandom = function() {
+        var str = "";
         for (var i=0;i<this.total;i++) {
-            this.domElm.innerHTML += this.getRandLatin();
+            str += this.getRandLatin();
+        }
+        return str;
+    }
+
+    box.prototype.resolve = function(threads) {
+        if (threads === undefined) {
+            threads = Math.ceil(this.total/250)
+        }
+        for (var i=0;i<this.total;i++) {
+            this.cleanChars[i] = i;
+        }
+        for (var i=0;i<threads;i++) {
+            this.resolveChar(true);
         }
     }
 
-    box.prototype.updateChar = function(recurse) {
+    box.prototype.dissolve = function(threads) {
+        if (threads === undefined) {
+            threads = Math.ceil(this.total/250)
+        }
+        for (var i=0;i<this.total;i++) {
+            this.cleanChars[i] = i;
+        }
+
+        this.buffer = this.getRandom();
+
+        for (var i=0;i<threads;i++) {
+            this.resolveChar(true);
+        }
+    }
+
+    box.prototype.resolveChar = function(recurse) {
         if (this.cleanChars.length) {
             var self = this,
                 j = Math.floor(Math.random() * this.cleanChars.length),
@@ -106,7 +135,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
             this.domElm.innerHTML = this.domElm.innerHTML.substring(0,i) + this.buffer[i] + this.domElm.innerHTML.substring(i+1);
 
             if (recurse !== undefined && recurse) {
-                setTimeout(function() {self.updateChar(true)}, 0);
+                setTimeout(function() {self.resolveChar(true)}, 0);
             }
 
             this.trigger("mb_charUpdated");
@@ -116,7 +145,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
     }
 
     box.prototype.populateBuffer = function() {
-        var msgRows = Math.ceil(this.msg.length/this.cols),
+        var msgRows = Math.ceil(this.msg.length/Math.min(this.options.msgLineMaxWidth, this.cols)),
             rowLength = Math.ceil(this.msg.length/msgRows),
             msgArr = this.msg.split(" "),
             cursor = Math.floor((this.rows - msgRows)/2) * this.cols,
@@ -125,7 +154,6 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
 
         /* initialize arrays */
         for (var i=0;i<this.total;i++) {
-            this.cleanChars[i] = i;
             this.buffer[i] = "\u0020";
         }
 
