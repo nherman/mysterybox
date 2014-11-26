@@ -54,7 +54,7 @@
             box.addEventListener('mb_init', function (e) {
 //                mb.updateChar(true);
             }, false);
-*/
+
                 function onResolve(e) {
                     mb.dissolve();
                     document.getElementsByTagName("body")[0].removeEventListener(
@@ -66,8 +66,15 @@
                     'mb_allCharsUpdated',
                     onResolve,
                     false);
+*/
 
-                mb.resolve();
+/* callbacks are called endlessly ?? */
+
+                mb.resolve({
+                    "callback": function(){
+//                        mb.dissolve();
+                    }
+                });
             }
         </script>
     <body>
