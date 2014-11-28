@@ -36,7 +36,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
             for (key in extension){
                 if (hasOwnProp.call(extension, key)) {
 
-                    if ((obj[key] === undefined || overwrite) && extension[key] !== undefined) {
+                    if (obj[key] === undefined || overwrite) {
                         obj[key] = extension[key];
                     }
 
@@ -255,6 +255,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
      * performs a "resolve" by default
      *
      * threads: # of intervals to spawn. default is 1 per 250 characters in msgBuffer
+     * updateFunction: function that updates the buffer - usually by calling resolveChar
      * renderFrequency: function to run on each iteration
      * callback: function to run after loop is complete
      * renderEventName: event that initiates render
@@ -275,23 +276,25 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
                     self.resolveChar();
                 },
                 callback: function() {}
-            },
+            };
+            extend(opt, options);
 
             /*
              * event listener to render display on buffer update
              * only call render after a certain number of characters have been replaced
              */
-            renderFunc = function() {
+            function renderFunc() {
                 if (!(totalCount++ % opt.renderFrequency)) {
                     self.render();
                 }
-            },
+            };
 
             /* event listener to clear intervals when buffer update is complete */
-            clearFunc = function() {
+            function clearFunc() {
+
                 /* clear all event listeners */
                 self.domElm.removeEventListener(opt.renderEventName, renderFunc);
-                self.domElm.removeEventListener(opt.renderEventName, clearFunc);
+                self.domElm.removeEventListener(opt.clearEventName, clearFunc);
 
                 /* do a render just in case */
                 self.render();
@@ -300,12 +303,12 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
                 for (var i=0; i<intervals.length; i++) {
                     clearInterval(intervals[i]);
                 }
-console.log("callback");
-                /* execute callback function */
-                opt.callback();
-            };
 
-        extend(opt, options);
+                /* execute callback function */
+                if (typeof opt.callback === "function") {
+                    opt.callback();
+                }
+            };
             
         /* attach event listeners */
         this.domElm.addEventListener(opt.renderEventName, renderFunc, false);
