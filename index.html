@@ -38,11 +38,11 @@
             window.onload = function() {
 
             var mb = new window.MYSTERYBOX({
-                domElmId: "mysterybox"
+//                domElmId: "mysterybox"
             });
             mb.initMsg("This is a test of the emergency broadcast system.");
-            mb.renderMsg();
-//            mb.initRandom();
+//            mb.renderMsg();
+            mb.initRandom();
 
 /*
                 mb.resolveMatrix({
@@ -56,7 +56,18 @@
                 });
 */
 
-//                mb.resolve();
+                mb.resolve({
+                    "callback": function() {
+                        setTimeout(function() {
+                            mb.dissolve({
+                                "callback": function() {
+                                     mb.renderMsg()
+                                }
+                            });
+                        },1000);
+                    }
+                });
+
             }
         </script>
     <body>

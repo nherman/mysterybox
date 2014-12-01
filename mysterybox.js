@@ -99,7 +99,41 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
                     line += " ";
                 }
             }
-        };
+        },
+
+        /*
+         * getCharacterDimensions
+         * For a given DOM element and character set, return the height and
+         * width of a average character in the element context
+         */
+        getCharacterDimensions = function(elm, alpha) {
+            var rect,
+                returnObj = {},
+                span = document.createElement("span");
+
+            /* create an element to test */
+            span.style.cssText += "visibility:hidden;position:absolute;top:-1000px;left:-1000px;";
+            /* since computed line height seems to always map exactly to CSS line height using two lines is probably uncecessary */
+            span.innerHTML = alpha + "<br>" + alpha; 
+            elm.appendChild(span);
+
+            /* get height and width */
+            try {
+                rect = span.getBoundingClientRect()
+                returnObj.w = rect.width/alpha.length;
+                returnObj.h = rect.height/2;
+            } catch(e) {
+                /* rect.width/height might not exist in older browsers. */
+            }
+
+            /* clean up */
+            elm.removeChild(span);
+
+            return returnObj;
+
+        },
+        /* sample of latin characters */
+        latinStr = "abcdefghijklmnopqrstuvqxyz";
 
 
     /*
@@ -113,12 +147,13 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
     function Box(options) {
         var 
             elmStyle,
+            charDimension = {'w':8.4,'h':17},
             elmDimension = {'x':0,'y':0};
 
         this.options = {
             msgLineMaxWidth: 80,
             cssText: "font-family: \"Courier New\", Courier, monospace;font-size:14px;line-height:17px;font-weight:normal;",
-            charWidth: 8.4,
+            charWidth: 8,
             charHeight: 17,
             message: "The quick brown fox jumped over the two lazy dogs",
             domElmId: ""
@@ -136,10 +171,14 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
 
         /*
          * Set element styles
+         *
+         * Force words to break and wrap instead of overflowing.
+         * Preserve white-space
          * http://jsbin.com/bulletproof-responsive-pre/2/edit
+         * letter-spacing: -0.4px seems to normalize the display across browsers... I'm not sure why
          */
-        this.domElm.style.cssText += "display:block;unicode-bidi:embed;word-break:break-all;word-wrap:break-word;white-space:pre;white-space: -moz-pre-wrap;white-space:pre-wrap;font-family:monospace;";
         this.domElm.style.cssText += this.options.cssText;
+        this.domElm.style.cssText += "display:block;unicode-bidi:embed;word-break:break-all;word-wrap:break-word;white-space:pre;white-space: -moz-pre-wrap;white-space:pre-wrap;letter-spacing:-0.4px;";
 
         /*
          * Get box size
@@ -150,13 +189,15 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
             "y": this.domElm.clientHeight - elmStyle.getPropertyValue('padding-top').match(/\d+/)[0] - elmStyle.getPropertyValue('padding-bottom').match(/\d+/)[0]
         });
 
-        /* number of text columns required */
-        this.cols = Math.floor(elmDimension.x/this.options.charWidth);
-
-        /* number of text rows required */
-        this.rows = Math.floor(elmDimension.y/this.options.charHeight);
-
-        /* total number of characters required */
+        /*
+         * Get character dimensions and calculate:
+         *  number of text columns required
+         *  number of text rows required
+         *  total number of characters required
+         */
+        charDimension = getCharacterDimensions(this.domElm, latinStr);
+        this.cols = Math.floor(elmDimension.x/charDimension.w);
+        this.rows = Math.floor(elmDimension.y/charDimension.h);
         this.total = this.rows * this.cols;
 
         /* msgBuffer contains formated message text */
@@ -336,7 +377,6 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
      * replace all charactes in the DOM element with random characters
      */
     Box.prototype.dissolve = function(options) {
-        console.log(this);
         var self = this,
             opt = {
                 "updateFunction": function() {
