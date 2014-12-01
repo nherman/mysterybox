@@ -41,46 +41,27 @@
                 domElmId: "mysterybox"
             });
             mb.initMsg("This is a test of the emergency broadcast system.");
-            mb.initRandom();
-
+            mb.renderMsg();
+//            mb.initRandom();
 
 /*
-            var mb = new window.MYSTERYBOX({
-                    message: "These are times that try men's souls!",
-                    domElmId: "mysterybox"
-                }),
-                box = document.getElementById("mysterybox");
-*/
-            /* loop forever!! */
-/*
-            box.addEventListener('mb_init', function (e) {
-//                mb.updateChar(true);
-            }, false);
-
-                function onResolve(e) {
-                    mb.dissolve();
-                    document.getElementsByTagName("body")[0].removeEventListener(
-                        "mb_allCharsUpdated",
-                        onResolve);
-                }
-
-                var evt = document.getElementsByTagName("body")[0].addEventListener(
-                    'mb_allCharsUpdated',
-                    onResolve,
-                    false);
-*/
-
-
                 mb.resolveMatrix({
-                    "callback": function(){
-//                        mb.dissolve();
+                    "threads": 5,
+                    "intervalMilliseconds": 50,
+                    "callback": function() {
+                        setTimeout(function() {
+                            mb.dissolve();
+                        },2000);
                     }
                 });
+*/
+
+//                mb.resolve();
             }
         </script>
     <body>
 
-        <div class="mysterybox" id="mysterybox"></div>
+        <pre class="mysterybox" id="mysterybox"></pre>
 
 
     </body>

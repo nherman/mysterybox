@@ -21,7 +21,8 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
             /* do event constructors work in newer version of IE? */
             "mb_charUpdated": new Event('mb_charUpdated'),
             "mb_allCharsUpdated": new Event('mb_allCharsUpdated'),
-            "mb_init": new Event('mb_init')
+            "mb_init": new Event('mb_init'),
+            "mb_init_msg": new Event('mb_init_msg')
         },
 
         /* 
@@ -135,8 +136,9 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
 
         /*
          * Set element styles
+         * http://jsbin.com/bulletproof-responsive-pre/2/edit
          */
-        this.domElm.style.cssText += "display:block;unicode-bidi:embed;white-space:pre;word-wrap: break-word;font-family:monospace;";
+        this.domElm.style.cssText += "display:block;unicode-bidi:embed;word-break:break-all;word-wrap:break-word;white-space:pre;white-space: -moz-pre-wrap;white-space:pre-wrap;font-family:monospace;";
         this.domElm.style.cssText += this.options.cssText;
 
         /*
@@ -185,10 +187,6 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
         /* trigger 'init' event */
         trigger(this, "mb_init");
 
-console.log("total: " + this.total);
-console.log("rows: " + this.rows);
-console.log("cols: " + this.cols);
-
     }
 
     /*
@@ -200,6 +198,7 @@ console.log("cols: " + this.cols);
             this.msg = msg;
         }
         populateMsgBuffer(this);
+        trigger(this, "mb_init_msg");
     }
 
     /*
@@ -217,6 +216,19 @@ console.log("cols: " + this.cols);
      */
     Box.prototype.render = function() {
         this.domElm.innerHTML = this.buffer;
+    }
+
+    /*
+     * renderMsg
+     * resolve entire buffer instantly
+     */
+    Box.prototype.renderMsg = function() {
+        var i = 0;
+        this.buffer = "";
+        for(;i<this.msgBuffer.length;i++) {
+            this.buffer += this.msgBuffer[i];
+        }
+        this.render();
     }
 
     /*
@@ -238,13 +250,6 @@ console.log("cols: " + this.cols);
         return str;
     }
 
-    /*
-     * resolve
-     * replace all charactes in the DOM element with the contents of the msgBuffer
-     */
-    Box.prototype.resolve = function(options) {
-        this.loop(options);
-    }
 
     /*
      * resolveMatrix
@@ -252,17 +257,18 @@ console.log("cols: " + this.cols);
      * would probably look better using katakana
      */
     Box.prototype.resolveMatrix = function(options) {
-        console.log("this.msgBuffer.length: " + this.msgBuffer.length);
         var self = this,
             opt = {
                 "threads": 1,
-                "intervalMilliseconds": 200,
+                "intervalMilliseconds": 50,
                 "updateFunction": (function() {
                     var ci,
                         /* shared counter tracks character updates */
                         charUpdateCount = 0,
-                        /* shared array of column indexes */
-                        cleanCols = [];
+                        /* shared array of column indexes tracks which columns are already being resolved */
+                        cleanCols = [],
+                        /* milliseconds to wait before recursing */
+                        recursionDelay = 50;
 
                     /* populate cleanCols */
                     for (ci = 0; ci < self.cols; ci++) {
@@ -272,6 +278,7 @@ console.log("cols: " + this.cols);
                     function resolveMatrix(intervalHandle, row, col) {
                         var next, i, characterIndex;
 
+                        /* if col is undefined then attempt to begin resolving a new column */
                         if (col === undefined) {
                             if (cleanCols.length) {
                                 /* get a random column */
@@ -291,12 +298,6 @@ console.log("cols: " + this.cols);
                         /* figure out the index of the character to resolve */
                         characterIndex = (row * self.cols) + col;
 
-                        if (col == 0) {
-                            console.log("row: " + row);
-                            console.log("index: " + characterIndex);
-                            console.log("msg: " + self.msgBuffer[characterIndex]);
-                        }
-
                         /* replace char at row / col with char from buffer */
                         self.buffer = self.buffer.substring(0,characterIndex) + self.msgBuffer[characterIndex] + self.buffer.substring(characterIndex+1);
                         charUpdateCount++;
@@ -307,7 +308,7 @@ console.log("cols: " + this.cols);
                         if (++row != self.rows) {
                             setTimeout(function() {
                                 resolveMatrix(intervalHandle, row, col);
-                            },300);
+                            },recursionDelay);
                         } else if (charUpdateCount >= self.total) {
                             trigger(self, "mb_allCharsUpdated");
                         }
@@ -323,10 +324,19 @@ console.log("cols: " + this.cols);
     }
 
     /*
+     * resolve
+     * replace all charactes in the DOM element with the contents of the msgBuffer
+     */
+    Box.prototype.resolve = function(options) {
+        this.loop(options);
+    }
+
+    /*
      * dissolve
      * replace all charactes in the DOM element with random characters
      */
     Box.prototype.dissolve = function(options) {
+        console.log(this);
         var self = this,
             opt = {
                 "updateFunction": function() {
@@ -357,15 +367,15 @@ console.log("cols: " + this.cols);
             counters = [],
             totalCount = 0,
             opt = {
-                threads: Math.ceil(this.total/500),
-                intervalMilliseconds: 0,
-                renderEventName: "mb_charUpdated",
-                clearEventName: "mb_allCharsUpdated",
-                renderFrequency: 1,
-                updateFunction: function() {
+                "threads": Math.ceil(this.total/250),
+                "intervalMilliseconds": 0,
+                "renderEventName": "mb_charUpdated",
+                "clearEventName": "mb_allCharsUpdated",
+                "renderFrequency": 1,
+                "updateFunction": function() {
                     self.resolveChar();
                 },
-                callback: function() {}
+                "callback": function() {}
             };
             extend(opt, options);
 
