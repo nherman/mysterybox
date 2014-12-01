@@ -1,11 +1,15 @@
 /***
  * MYSTERYBOX
+ * https://github.com/nherman/mysterybox
  * Fill up a DOM element with random characters then have them "resolve" into something non-random
  */
 
 window.MYSTERYBOX = window.MYSTERYBOX || (function() {
     "use strict";
 
+    /*
+     * var block contains global private variables and helper functions
+     */
     var 
 
         /* prevent calls to console.log from throwing an error in browsers that don't support it */
@@ -153,9 +157,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
         this.options = {
             msgLineMaxWidth: 80,
             cssText: "font-family: \"Courier New\", Courier, monospace;font-size:14px;line-height:17px;font-weight:normal;",
-            charWidth: 8,
-            charHeight: 17,
-            message: "The quick brown fox jumped over the two lazy dogs",
+            message: "",
             domElmId: ""
         };
         extend(this.options, options);
@@ -380,7 +382,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
         var self = this,
             opt = {
                 "updateFunction": function() {
-                    self.resolveChar(getRandLatin());
+                    self.updateChar(getRandLatin());
                 }
             };
         extend(opt, options);
@@ -394,7 +396,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
      * performs a "resolve" by default
      *
      * threads: # of intervals to spawn. default is 1 per 250 characters in msgBuffer
-     * updateFunction: function that updates the buffer - usually by calling resolveChar
+     * updateFunction: function that updates the buffer - usually by calling updateChar
      * renderFrequency: function to run on each iteration
      * callback: function to run after loop is complete
      * renderEventName: event that initiates render
@@ -413,7 +415,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
                 "clearEventName": "mb_allCharsUpdated",
                 "renderFrequency": 1,
                 "updateFunction": function() {
-                    self.resolveChar();
+                    self.updateChar();
                 },
                 "callback": function() {}
             };
@@ -486,11 +488,11 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
     }
 
     /*
-     * resolveChar
+     * updateChar
      * randomly select a "clean" character from the DOM element and replace
      * it with the matching character from the msgBuffer OR the character passed in
      */
-    Box.prototype.resolveChar = function(c) {
+    Box.prototype.updateChar = function(c) {
         if (this.cleanChars.length) {
             var j = Math.floor(Math.random() * this.cleanChars.length),
                 i = this.cleanChars[j];
