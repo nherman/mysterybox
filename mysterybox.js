@@ -184,6 +184,11 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
 
         /* trigger 'init' event */
         trigger(this, "mb_init");
+
+console.log("total: " + this.total);
+console.log("rows: " + this.rows);
+console.log("cols: " + this.cols);
+
     }
 
     /*
@@ -215,6 +220,14 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
     }
 
     /*
+     * render
+     * push changes in the buffer to DOM
+     */
+    Box.prototype.render = function() {
+        this.domElm.innerHTML = this.buffer;
+    }
+
+    /*
      * get a string of random characters the length of the msgBuffer
      */
     Box.prototype.getRandom = function() {
@@ -231,6 +244,82 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
      */
     Box.prototype.resolve = function(options) {
         this.loop(options);
+    }
+
+    /*
+     * resolveMatrix
+     * effect similar to code displays in the matrix movies
+     * would probably look better using katakana
+     */
+    Box.prototype.resolveMatrix = function(options) {
+        console.log("this.msgBuffer.length: " + this.msgBuffer.length);
+        var self = this,
+            opt = {
+                "threads": 1,
+                "intervalMilliseconds": 200,
+                "updateFunction": (function() {
+                    var ci,
+                        /* shared counter tracks character updates */
+                        charUpdateCount = 0,
+                        /* shared array of column indexes */
+                        cleanCols = [];
+
+                    /* populate cleanCols */
+                    for (ci = 0; ci < self.cols; ci++) {
+                        cleanCols[ci] = ci;
+                    }
+
+                    function resolveMatrix(intervalHandle, row, col) {
+                        var next, i, characterIndex;
+
+                        if (col === undefined) {
+                            if (cleanCols.length) {
+                                /* get a random column */
+                                i = Math.floor(Math.random() * cleanCols.length);
+                                col = cleanCols[i];
+                                cleanCols.splice(i,1);
+                            } else {
+                                /* all columns are being resolved - do not start any more recursion stacks */
+                                clearInterval(intervalHandle);
+                                return;
+                            }
+                        }
+
+                        /* if row is not defined then start with row 0 */
+                        row = row || 0;
+
+                        /* figure out the index of the character to resolve */
+                        characterIndex = (row * self.cols) + col;
+
+                        if (col == 0) {
+                            console.log("row: " + row);
+                            console.log("index: " + characterIndex);
+                            console.log("msg: " + self.msgBuffer[characterIndex]);
+                        }
+
+                        /* replace char at row / col with char from buffer */
+                        self.buffer = self.buffer.substring(0,characterIndex) + self.msgBuffer[characterIndex] + self.buffer.substring(characterIndex+1);
+                        charUpdateCount++;
+                        trigger(self, "mb_charUpdated");
+
+
+                        /* not done with the column yet - recurse */
+                        if (++row != self.rows) {
+                            setTimeout(function() {
+                                resolveMatrix(intervalHandle, row, col);
+                            },300);
+                        } else if (charUpdateCount >= self.total) {
+                            trigger(self, "mb_allCharsUpdated");
+                        }
+
+                    }
+
+                    return resolveMatrix;
+                })()
+            };
+        extend(opt, options);
+
+        this.loop(opt);
     }
 
     /*
@@ -268,7 +357,8 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
             counters = [],
             totalCount = 0,
             opt = {
-                threads: Math.ceil(this.total/250),
+                threads: Math.ceil(this.total/500),
+                intervalMilliseconds: 0,
                 renderEventName: "mb_charUpdated",
                 clearEventName: "mb_allCharsUpdated",
                 renderFrequency: 1,
@@ -319,16 +409,29 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
             this.cleanChars[i] = i;
         }
 
-        /* start intervals */
+        /* 
+         * start intervals
+         * wrap interval payload in a closure to make it aware of it's own
+         * index in the intervals array, and allow it to maintain a counter.
+         * This allow it to cancel itself if an infinite loop bug occurs.
+         */
         for (var i=0;i<opt.threads;i++) {
-            counters[i] = 0;
-            intervals[i] = setInterval(function() {
-                if (counters[i]++ > this.total) {
+            intervals[i] = setInterval((function(intervalIndex) {
+                var counter = 0;
+                return function() {
                     /* safety net - make sure we don't have a bug that creates an infinite loop */
-                    clearInterval(intervals[i]);
+                    if (counter++ > self.total) {
+                        clearInterval(intervals[intervalIndex]);
+                        console.log("killing thread");
+                    }
+
+                    /* 
+                     * call update function to change the display
+                     * pass in interval handle to allow update funtion to override loop
+                     */
+                    opt.updateFunction(intervals[i]);
                 }
-                opt.updateFunction();
-            }, 0);
+            })(i), opt.intervalMilliseconds);
         }
     }
 
