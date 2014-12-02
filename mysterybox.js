@@ -127,6 +127,9 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
             this.domElm = document.getElementById(this.options.domElmId);
         }
 
+        /* clear element contents */
+        this.domElm.innerHTML = "";        
+
         /*
          * Set element styles
          *
@@ -352,13 +355,14 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
             opt = {
                 "threads": Math.ceil(this.total/250),
                 "intervalMilliseconds": 0,
+                "callbackDelayMilliseconds": 0,
                 "renderEventName": "mb_charUpdated",
                 "clearEventName": "mb_allCharsUpdated",
                 "renderFrequency": 1,
                 "updateFunction": function() {
                     self.updateChar();
                 },
-                "callback": function() {}
+                "callback": ""
             };
             Box.extend(opt, options);
 
@@ -389,7 +393,13 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
 
                 /* execute callback function */
                 if (typeof opt.callback === "function") {
-                    opt.callback();
+                    if (opt.callbackDelayMilliseconds) {
+                        setTimeout(function() {
+                            opt.callback();
+                        }, opt.callbackDelayMilliseconds);
+                    } else {
+                        opt.callback();
+                    }
                 }
             };
             
