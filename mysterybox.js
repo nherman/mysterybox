@@ -26,7 +26,8 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
         populateMsgBuffer = function(mb) {
             var msgRows = Math.ceil(mb.msg.length/Math.min(mb.options.msgLineMaxWidth, mb.cols)),
                 rowLength = Math.ceil(mb.msg.length/msgRows),
-                msgArr = mb.msg.split(" "),
+                /* split message into words - preserve line breaks */
+                msgArr = mb.msg.replace(/\s+/g," ").replace(/\n/g, " linebreak ").split(/\s/),
                 cursor = Math.floor((mb.rows - msgRows)/2) * mb.cols,
                 line = "",
                 nextLen;
@@ -37,12 +38,18 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
             }
 
             while (msgArr.length > 0) {
-                line += msgArr[0];
-                msgArr.splice(0,1);
-                try {
-                    nextLen = msgArr[0].length;
-                } catch (e) {
+                console.log(msgArr[0]);
+                if (msgArr[0] == "linebreak") {
+                    msgArr.splice(0,1);
                     nextLen = 0;
+                } else {
+                    line += msgArr[0];
+                    msgArr.splice(0,1);
+                    try {
+                        nextLen = msgArr[0].length;
+                    } catch (e) {
+                        nextLen = 0;
+                    }
                 }
 
                 if (line.length >= rowLength || line.length + nextLen > mb.cols || nextLen == 0) {

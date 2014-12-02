@@ -28,17 +28,18 @@ var insertpoint = "<!-- tests -->",
     tests = {
     "Multi-line": function() {
         var mb = new window.MYSTERYBOX();
-        mb.initMsg("This is a test of the\nemergency broadcast system");
-        mb.initRandom();
+        mb.initMsg("t\n.#.\n.###.\n.#%##%.\n.%##%###.\n.##%###%##.\n.#%###%##%##.\n#\n#\n");
+//        mb.initRandom();
+        mb.renderMsg();
         mb.resolve({
             "callback": function() {
-                 resetTests();
+//                 resetTests();
             }
         });
     },
     "Basic": function() {
         var mb = new window.MYSTERYBOX({
-            "message": "Some are sad and some are glad and some are very, very bad."
+            "message": "Some are sad and some are glad and some are very, very bad. Why are they sad and glad and bad? I do not know. Go ask your dad."
         });
         mb.initRandom();
         mb.resolve({
