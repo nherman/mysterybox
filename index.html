@@ -34,18 +34,19 @@
         </style>
 
         <script src="mysterybox.js"></script>
+        <script src="resolvebycolumn.js"></script>
         <script>
             window.onload = function() {
 
             var mb = new window.MYSTERYBOX({
-//                domElmId: "mysterybox"
+//                domElmId: "mysterybox",
+                "message": "This is a test of the emergency broadcast system."
             });
-            mb.initMsg("This is a test of the emergency broadcast system.");
+//            mb.initMsg("This is a test of the emergency broadcast system.");
 //            mb.renderMsg();
             mb.initRandom();
 
-/*
-                mb.resolveMatrix({
+                mb.resolveByColumn({
                     "threads": 5,
                     "intervalMilliseconds": 50,
                     "callback": function() {
@@ -54,7 +55,7 @@
                         },2000);
                     }
                 });
-*/
+/*
 
                 mb.resolve({
                     "callback": function() {
@@ -67,12 +68,13 @@
                         },1000);
                     }
                 });
+*/
 
             }
         </script>
     <body>
 
-        <pre class="mysterybox" id="mysterybox"></pre>
+        <div class="mysterybox" id="mysterybox"></div>
 
 
     </body>

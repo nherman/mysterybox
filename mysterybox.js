@@ -19,50 +19,6 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
         hasOwnProp = Object.prototype.hasOwnProperty,
 
         /*
-         * Box emits the following events: character init, updated, all characters updated
-         */
-        events = {
-            /* do event constructors work in newer version of IE? */
-            "mb_charUpdated": new Event('mb_charUpdated'),
-            "mb_allCharsUpdated": new Event('mb_allCharsUpdated'),
-            "mb_init": new Event('mb_init'),
-            "mb_init_msg": new Event('mb_init_msg')
-        },
-
-        /* 
-            Extend: helper function for copying parameters from one object to another.
-            Not a "full" object copy - only useful for copying simple, flat hashes.
-        */
-        extend = function(obj, extension, overwrite){
-            var i, j, key;
-            if (overwrite !== false) {
-                overwrite = true;
-            }
-            for (key in extension){
-                if (hasOwnProp.call(extension, key)) {
-
-                    if (obj[key] === undefined || overwrite) {
-                        obj[key] = extension[key];
-                    }
-
-                    
-                }
-            }
-        },
-
-        /* return a random latin character */
-        getRandLatin = function() {
-            //return String.fromCharCode(0x30A0 + Math.random() * (0x30FF-0x30A0+1));   //katakana
-            //return String.fromCharCode(0x0041 + Math.random() * (0x005A-0x0041+1));   //uppercase A-Z
-            return String.fromCharCode(0x0061 + Math.random() * (0x007A-0x0061));      //lowercase a-z
-        },
-
-        /* dispatch an event */
-        trigger = function(mb, eventName) {
-            mb.domElm.dispatchEvent(events[eventName]);
-        },
-
-        /*
          * populateMsgBuffer
          * insert all characters from msg into msgBuffer.
          * format the text based on configuration
@@ -160,7 +116,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
             message: "",
             domElmId: ""
         };
-        extend(this.options, options);
+        Box.extend(this.options, options);
 
         /*
          * Get DOM element
@@ -186,7 +142,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
          * Get box size
          */
         elmStyle = window.getComputedStyle(this.domElm);
-        extend(elmDimension, {
+        Box.extend(elmDimension, {
             "x": this.domElm.clientWidth - elmStyle.getPropertyValue('padding-left').match(/\d+/)[0] - elmStyle.getPropertyValue('padding-right').match(/\d+/)[0],
             "y": this.domElm.clientHeight - elmStyle.getPropertyValue('padding-top').match(/\d+/)[0] - elmStyle.getPropertyValue('padding-bottom').match(/\d+/)[0]
         });
@@ -228,9 +184,67 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
         this.initMsg();
 
         /* trigger 'init' event */
-        trigger(this, "mb_init");
+        this.trigger("mb_init");
 
     }
+
+    /*
+     * Class Methods
+     */
+
+    /*
+        Box emits the following events:
+        init, message updated, character updated, all characters updated
+    */
+    Box.events = {
+        /* do event constructors work in newer version of IE? */
+        "mb_charUpdated": new Event('mb_charUpdated'),
+        "mb_allCharsUpdated": new Event('mb_allCharsUpdated'),
+        "mb_init": new Event('mb_init'),
+        "mb_init_msg": new Event('mb_init_msg')
+    };
+
+    /* 
+        Extend: helper function for copying parameters from one object to another.
+        Not a "full" object copy - only useful for copying simple, flat hashes.
+    */
+    Box.extend = function(obj, extension, overwrite){
+        var i, j, key;
+        if (overwrite !== false) {
+            overwrite = true;
+        }
+        for (key in extension){
+            if (hasOwnProp.call(extension, key)) {
+
+                if (obj[key] === undefined || overwrite) {
+                    obj[key] = extension[key];
+                }
+
+                
+            }
+        }
+    };
+
+    /* return a random latin character */
+    Box.getRandLatin = function() {
+        //return String.fromCharCode(0x30A0 + Math.random() * (0x30FF-0x30A0+1));   //katakana
+        //return String.fromCharCode(0x0041 + Math.random() * (0x005A-0x0041+1));   //uppercase A-Z
+        return String.fromCharCode(0x0061 + Math.random() * (0x007A-0x0061));      //lowercase a-z
+    };
+
+
+    /*
+     * Instance Methods
+     */
+
+    /* 
+     * trigger
+     * dispatch an event
+     */
+    Box.prototype.trigger = function(eventName) {
+        this.domElm.dispatchEvent(Box.events[eventName]);
+    };
+
 
     /*
      * initMsg
@@ -241,7 +255,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
             this.msg = msg;
         }
         populateMsgBuffer(this);
-        trigger(this, "mb_init_msg");
+        this.trigger("mb_init_msg");
     }
 
     /*
@@ -288,82 +302,9 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
     Box.prototype.getRandom = function() {
         var str = "";
         for (var i=0;i<this.total;i++) {
-            str += getRandLatin();
+            str += Box.getRandLatin();
         }
         return str;
-    }
-
-
-    /*
-     * resolveMatrix
-     * effect similar to code displays in the matrix movies
-     * would probably look better using katakana
-     */
-    Box.prototype.resolveMatrix = function(options) {
-        var self = this,
-            opt = {
-                "threads": 1,
-                "intervalMilliseconds": 50,
-                "updateFunction": (function() {
-                    var ci,
-                        /* shared counter tracks character updates */
-                        charUpdateCount = 0,
-                        /* shared array of column indexes tracks which columns are already being resolved */
-                        cleanCols = [],
-                        /* milliseconds to wait before recursing */
-                        recursionDelay = 50;
-
-                    /* populate cleanCols */
-                    for (ci = 0; ci < self.cols; ci++) {
-                        cleanCols[ci] = ci;
-                    }
-
-                    function resolveMatrix(intervalHandle, row, col) {
-                        var next, i, characterIndex;
-
-                        /* if col is undefined then attempt to begin resolving a new column */
-                        if (col === undefined) {
-                            if (cleanCols.length) {
-                                /* get a random column */
-                                i = Math.floor(Math.random() * cleanCols.length);
-                                col = cleanCols[i];
-                                cleanCols.splice(i,1);
-                            } else {
-                                /* all columns are being resolved - do not start any more recursion stacks */
-                                clearInterval(intervalHandle);
-                                return;
-                            }
-                        }
-
-                        /* if row is not defined then start with row 0 */
-                        row = row || 0;
-
-                        /* figure out the index of the character to resolve */
-                        characterIndex = (row * self.cols) + col;
-
-                        /* replace char at row / col with char from buffer */
-                        self.buffer = self.buffer.substring(0,characterIndex) + self.msgBuffer[characterIndex] + self.buffer.substring(characterIndex+1);
-                        charUpdateCount++;
-                        trigger(self, "mb_charUpdated");
-
-
-                        /* not done with the column yet - recurse */
-                        if (++row != self.rows) {
-                            setTimeout(function() {
-                                resolveMatrix(intervalHandle, row, col);
-                            },recursionDelay);
-                        } else if (charUpdateCount >= self.total) {
-                            trigger(self, "mb_allCharsUpdated");
-                        }
-
-                    }
-
-                    return resolveMatrix;
-                })()
-            };
-        extend(opt, options);
-
-        this.loop(opt);
     }
 
     /*
@@ -382,10 +323,10 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
         var self = this,
             opt = {
                 "updateFunction": function() {
-                    self.updateChar(getRandLatin());
+                    self.updateChar(Box.getRandLatin());
                 }
             };
-        extend(opt, options);
+        Box.extend(opt, options);
 
         this.loop(opt);
     }
@@ -419,7 +360,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
                 },
                 "callback": function() {}
             };
-            extend(opt, options);
+            Box.extend(opt, options);
 
             /*
              * event listener to render display on buffer update
@@ -504,9 +445,9 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
             }
             this.buffer = this.buffer.substring(0,i) + c + this.buffer.substring(i+1);
 
-            trigger(this, "mb_charUpdated");
+            this.trigger("mb_charUpdated");
         } else {
-            trigger(this, "mb_allCharsUpdated");
+            this.trigger("mb_allCharsUpdated");
         }
     }
 
