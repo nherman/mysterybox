@@ -8,6 +8,7 @@ random or non-random text and animate betweemn the two states. The original idea
 ### Basic Usage
 
 ```javascript
+<div id="mysterybox" style="width:300px;height:300px;"></div>
 <script src="https://raw.githubusercontent.com/nherman/mysterybox/master/mysterybox.js"></script>
 <script>
     /* init DOM element */
@@ -35,9 +36,9 @@ random or non-random text and animate betweemn the two states. The original idea
 
 ### Behind the Scenes
 
-Resolve and Dissolve depend on the the loop() method.  Loop simply generates a group of threads (setInterval calls) which simply call an update function.
+Resolve and Dissolve depend on the the loop() method.  Loop generates a group of threads (setInterval calls) which simply call an update function.
 
-The update function does the work of editing the display buffer and fires an event after each character is updated, and when updates are complete. Periodically, Loop will render changes to the browser.
+The update function does the work of editing the display buffer, fires an event after each character is updated, and another when updates are complete. Periodically, Loop will render changes to the browser.
 
 UpdateChar() is the default update function used by Resolve and Dissolve. It simply picks a character at random and updates it.
 
