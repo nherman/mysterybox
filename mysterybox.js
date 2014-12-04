@@ -292,6 +292,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
         if (preserve_whitespace !== true) {
             preserve_whitespace = false;
         }
+
         populateMsgBuffer(this, preserve_whitespace);
         this.trigger("mb_init_msg");
     }
@@ -310,7 +311,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
      * push changes in the buffer to DOM
      */
     Box.prototype.render = function() {
-        this.domElm.innerText = this.buffer;
+        this.domElm.innerHTML = this.buffer.replace('<','&lt;').replace('>','&gt;');
     }
 
     /*
