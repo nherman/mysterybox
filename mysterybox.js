@@ -23,48 +23,74 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
          * insert all characters from msg into msgBuffer.
          * format the text based on configuration
          */
-        populateMsgBuffer = function(mb) {
-            var msgRows = Math.ceil(mb.msg.length/Math.min(mb.options.msgLineMaxWidth, mb.cols)),
-                rowLength = Math.ceil(mb.msg.length/msgRows),
-                /* split message into words - preserve line breaks */
-                msgArr = mb.msg.replace(/\s+/g," ").replace(/\n/g, " linebreak ").split(/\s/),
-                cursor = Math.floor((mb.rows - msgRows)/2) * mb.cols,
-                line = "",
-                nextLen;
+        populateMsgBuffer = function(mb, preserve_whitespace) {
+            var cursor = 0;
+
+            function writeLine(line) {
+                var i=0,
+                    pad = (mb.cols - line.length)/2;
+
+                cursor += Math.floor(pad)  //pad left
+                for (;i<line.length;i++) {
+                    mb.msgBuffer[cursor++] = line.charAt(i);
+                }
+                cursor += Math.ceil(pad)  //pad right
+            }
+
+            function preserveWhitespace() {
+                var msgArr = mb.msg.split(/\n/);
+
+                cursor = Math.floor((mb.rows - msgArr.length)/2) * mb.cols;
+
+                while (msgArr.length > 0) {
+                    writeLine(msgArr[0]);
+                    msgArr.splice(0,1);
+                }
+            }
+
+            function ignoreWhitespace() {
+                var msgRows = Math.ceil(mb.msg.length/Math.min(mb.options.msgLineMaxWidth, mb.cols)),
+                    rowLength = Math.ceil(mb.msg.length/msgRows),
+                    /* split message into words - preserve line breaks */
+                    msgArr = mb.msg.replace(/\s+/g," ").replace(/\n/g, " LINEBREAK ").split(/\s/),
+                    line = "",
+                    nextLen;
+
+                cursor = Math.floor((mb.rows - msgRows)/2) * mb.cols;
+
+                while (msgArr.length > 0) {
+                    if (msgArr[0] == "LINEBREAK") {
+                        msgArr.splice(0,1);
+                        nextLen = 0;
+                    } else {
+                        line += msgArr[0];
+                        msgArr.splice(0,1);
+                        try {
+                            nextLen = msgArr[0].length;
+                        } catch (e) {
+                            nextLen = 0;
+                        }
+                    }
+
+                    if (line.length >= rowLength || line.length + nextLen > mb.cols || nextLen == 0) {
+                        // write line to msgBuffer
+                        writeLine(line);
+                        line = "";
+                    } else {
+                        line += " ";
+                    }
+                }
+            }
 
             /* initialize arrays */
             for (var i=0;i<mb.total;i++) {
                 mb.msgBuffer[i] = "\u0020";
             }
 
-            while (msgArr.length > 0) {
-                console.log(msgArr[0]);
-                if (msgArr[0] == "linebreak") {
-                    msgArr.splice(0,1);
-                    nextLen = 0;
-                } else {
-                    line += msgArr[0];
-                    msgArr.splice(0,1);
-                    try {
-                        nextLen = msgArr[0].length;
-                    } catch (e) {
-                        nextLen = 0;
-                    }
-                }
-
-                if (line.length >= rowLength || line.length + nextLen > mb.cols || nextLen == 0) {
-                    // write line to msgBuffer
-                    cursor += Math.floor((mb.cols - line.length)/2)  //pad left
-
-                    for (i=0;i<line.length;i++) {
-                        mb.msgBuffer[cursor++] = line.charAt(i);
-                    }
-
-                    cursor += Math.ceil((mb.cols - line.length)/2)  //pad right
-                    line = "";
-                } else {
-                    line += " ";
-                }
+            if (preserve_whitespace) {
+                preserveWhitespace();
+            } else {
+                ignoreWhitespace();
             }
         },
 
@@ -143,10 +169,9 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
          * Force words to break and wrap instead of overflowing.
          * Preserve white-space
          * http://jsbin.com/bulletproof-responsive-pre/2/edit
-         * letter-spacing: -0.4px seems to normalize the display across browsers... I'm not sure why
          */
         this.domElm.style.cssText += this.options.cssText;
-        this.domElm.style.cssText += "display:block;unicode-bidi:embed;word-break:break-all;word-wrap:break-word;white-space:pre;white-space: -moz-pre-wrap;white-space:pre-wrap;letter-spacing:-0.4px;";
+        this.domElm.style.cssText += "display:block;unicode-bidi:embed;word-break:break-all;word-wrap:break-word;white-space:pre;white-space: -moz-pre-wrap;white-space:pre-wrap;";
 
         /*
          * Get box size
@@ -260,11 +285,14 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
      * initMsg
      * set msg and populate "resolved" msgBuffer
      */
-    Box.prototype.initMsg = function(msg) {
+    Box.prototype.initMsg = function(msg, preserve_whitespace) {
         if (msg !== undefined) {
             this.msg = msg;
         }
-        populateMsgBuffer(this);
+        if (preserve_whitespace !== true) {
+            preserve_whitespace = false;
+        }
+        populateMsgBuffer(this, preserve_whitespace);
         this.trigger("mb_init_msg");
     }
 
