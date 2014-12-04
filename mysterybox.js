@@ -310,7 +310,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
      * push changes in the buffer to DOM
      */
     Box.prototype.render = function() {
-        this.domElm.innerHTML = this.buffer;
+        this.domElm.innerText = this.buffer;
     }
 
     /*
@@ -324,14 +324,6 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
             this.buffer += this.msgBuffer[i];
         }
         this.render();
-    }
-
-    /*
-     * render
-     * push changes in the buffer to DOM
-     */
-    Box.prototype.render = function() {
-        this.domElm.innerHTML = this.buffer;
     }
 
     /*
