@@ -3,7 +3,7 @@
 ##### "The useless little library with the dumb name"
 
 Mysterybox is a Javascript library that can fill a DOM element with either
-random or non-random text and animate betweemn the two states. The original idea was to create the effect of random characters "dissoving" into a readable message.  However, it's customizable to the point where it's essentially a tool for generating loops that do whatever you want.
+random or non-random text and animate between the two states. The original idea was to create the effect of random characters "dissoving" into a readable message.  However, it's customizable to the point where it's essentially a tool for generating loops that do whatever you want.
 
 ### Basic Usage
 
@@ -23,8 +23,11 @@ random or non-random text and animate betweemn the two states. The original idea
     /* randomly update characters until the message is revealed */
     mb.resolve();
 
-    /* change the message */
-    mb.initMsg("He will live at our house. He will grow and grow! Will our mother like this? We don't know.");
+    /*
+        change the message
+        set optional flag to true to preserve whitespace.  good for displaying ascii art.
+     */
+    mb.initMsg("He will live at our house. He will grow and grow! Will our mother like this? We don't know.", false);
 
     /* Display the message immediately */
     mb.renderMsg();
@@ -78,6 +81,9 @@ mb.resolve({
 
     /* intervalMilliseconds: delay between interval iterations. Higher numbers resolve more slowly */
     "intervalMilliseconds": 50,
+    
+    /* callbackDelayMilliseconds: delay between end of loop and firing of callback */
+    "callbackDelayMilliseconds": 1000,
 
     /* renderEventName: event that triggers rendering of display */
     "renderEventName": "mb_charUpdated",
