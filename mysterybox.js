@@ -189,6 +189,12 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
          *  total number of characters required
          */
         charDimension = getCharacterDimensions(this.domElm, latinStr);
+
+        /*
+        TODO
+        This is not always accurate.  ios chrome will put 38 characters on a line when x/w < 38 (i.e. it's 3.99)
+        possibly because char dimension are gotten via getBoundingClientRect which is more accurate than clientWidth?
+        */
         this.cols = Math.floor(elmDimension.x/charDimension.w);
         this.rows = Math.floor(elmDimension.y/charDimension.h);
         this.total = this.rows * this.cols;
