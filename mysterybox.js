@@ -289,6 +289,19 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
         return String.fromCharCode(0x0061 + Math.random() * (0x007A-0x0061));      //lowercase a-z
     };
 
+    /* execute a callback function using standard options */
+    Box.callback = function(options) {
+        if (typeof options.callback === "function") {
+            if (options.callbackDelayMilliseconds) {
+                setTimeout(function() {
+                    options.callback();
+                }, options.callbackDelayMilliseconds);
+            } else {
+                options.callback();
+            }
+        }
+    };
+    
 
     /*
      * Instance Methods
@@ -323,9 +336,19 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
      * initRandom
      * fill the DOM element with random characters
      */
-    Box.prototype.initRandom = function(msg) {
+    Box.prototype.initRandom = function(options) {
+        var self = this,
+            opt = {
+                "callbackDelayMilliseconds": 0,
+                "callback": ""
+            };
+        Box.extend(opt, options);
+
         this.buffer = this.getRandom();
         this.render();
+
+        /* execute callback function */
+        Box.callback(opt);
     }
 
     /*
@@ -442,15 +465,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
                 }
 
                 /* execute callback function */
-                if (typeof opt.callback === "function") {
-                    if (opt.callbackDelayMilliseconds) {
-                        setTimeout(function() {
-                            opt.callback();
-                        }, opt.callbackDelayMilliseconds);
-                    } else {
-                        opt.callback();
-                    }
-                }
+                Box.callback(opt);
             };
             
         /* attach event listeners */
