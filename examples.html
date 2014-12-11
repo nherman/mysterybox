@@ -43,24 +43,6 @@ var insertpoint = "<!-- tests -->",
             }
         });
     },
-    "Basic": function() {
-        var mb = new window.MYSTERYBOX({
-            "message": "Some are sad and some are glad and some are very, very bad. Why are they sad and glad and bad? I do not know. Go ask your dad."
-        });
-        mb.initRandom();
-        mb.resolve({
-            "callbackDelayMilliseconds": 2000,
-            "callback": function() {
-                mb.dissolve({
-                    "callbackDelayMilliseconds": 1000,
-                    "callback": function() {
-                         mb.renderMsg();
-                         resetTests();
-                    }
-                });
-            }
-        });
-    },
     "Falling Rain": function() {
         var mb = new window.MYSTERYBOX({
             "message": "Why are they sad and glad and bad? I do not know. Go ask your dad."
@@ -74,6 +56,24 @@ var insertpoint = "<!-- tests -->",
                 mb.dissolve({
                     "callback": function() {
                         resetTests();
+                    }
+                });
+            }
+        });
+    },
+    "Basic": function() {
+        var mb = new window.MYSTERYBOX({
+            "message": "Some are sad and some are glad and some are very, very bad. Why are they sad and glad and bad? I do not know. Go ask your dad."
+        });
+        mb.initRandom();
+        mb.resolve({
+            "callbackDelayMilliseconds": 2000,
+            "callback": function() {
+                mb.dissolve({
+                    "callbackDelayMilliseconds": 1000,
+                    "callback": function() {
+                         mb.renderMsg();
+                         resetTests();
                     }
                 });
             }
@@ -129,6 +129,7 @@ window.onload = function() {
 }
 
         </script>
+    </head>
     <body>
         <div class="container">
             <h1>mysterybox examples</h1>

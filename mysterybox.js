@@ -101,28 +101,49 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
          */
         getCharacterDimensions = function(elm, alpha) {
             var rect,
-                returnObj = {},
+                r = {"cols":0},
                 span = document.createElement("span");
 
             /* create an element to test */
-            span.style.cssText += "visibility:hidden;position:absolute;top:-1000px;left:-1000px;";
+            span.style.cssText += "visibility:hidden;";
             /* since computed line height seems to always map exactly to CSS line height using two lines is probably uncecessary */
             span.innerHTML = alpha + "<br>" + alpha; 
             elm.appendChild(span);
 
-            /* get height and width */
             try {
+                /* get character height and width */
                 rect = span.getBoundingClientRect()
-                returnObj.w = rect.width/alpha.length;
-                returnObj.h = rect.height/2;
+                r.w = rect.width/alpha.length;
+                r.h = rect.height/2;
+
+                /*
+                    get total number of cols...
+                    I would prefer to do this with math (i.e. element width / character width)
+                    but that method becomes inaccurate for some reason if the browser zoom
+                    level != 100%
+                */
+                span.innerHTML = "";
+                rect = span.getBoundingClientRect();
+                while (rect.height <= r.h) {
+                    span.innerHTML += alpha;
+                    r.cols += alpha.length;
+                    rect = span.getBoundingClientRect();
+                }
+                while (rect.height > r.h) {
+                    span.innerHTML = span.innerHTML.substring(0,span.innerHTML.length-1);
+                    r.cols--;
+                    rect = span.getBoundingClientRect();
+                }
+
             } catch(e) {
                 /* rect.width/height might not exist in older browsers. */
+                return;
             }
 
             /* clean up */
             elm.removeChild(span);
 
-            return returnObj;
+            return r;
 
         },
         /* sample of latin characters */
@@ -190,12 +211,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
          */
         charDimension = getCharacterDimensions(this.domElm, latinStr);
 
-        /*
-        TODO
-        This is not always accurate.  ios chrome will put 38 characters on a line when x/w < 38 (i.e. it's 3.99)
-        possibly because char dimension are gotten via getBoundingClientRect which is more accurate than clientWidth?
-        */
-        this.cols = Math.floor(elmDimension.x/charDimension.w);
+        this.cols = charDimension.cols || Math.round(elmDimension.x/charDimension.w);;
         this.rows = Math.floor(elmDimension.y/charDimension.h);
         this.total = this.rows * this.cols;
 
