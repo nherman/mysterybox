@@ -106,15 +106,14 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
 
             /* create an element to test */
             span.style.cssText += "visibility:hidden;";
-            /* since computed line height seems to always map exactly to CSS line height using two lines is probably uncecessary */
-            span.innerHTML = alpha + "<br>" + alpha; 
+            span.innerHTML = alpha; 
             elm.appendChild(span);
 
             try {
                 /* get character height and width */
                 rect = span.getBoundingClientRect()
                 r.w = rect.width/alpha.length;
-                r.h = rect.height/2;
+                r.h = parseFloat(elm.style.lineHeight, 10);
 
                 /*
                     get total number of cols...
@@ -122,8 +121,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
                     but that method becomes inaccurate for some reason if the browser zoom
                     level != 100%
                 */
-                span.innerHTML = "";
-                rect = span.getBoundingClientRect();
+                r.cols = alpha.length;
                 while (rect.height <= r.h) {
                     span.innerHTML += alpha;
                     r.cols += alpha.length;
