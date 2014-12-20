@@ -424,7 +424,7 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
             counters = [],
             totalCount = 0,
             opt = {
-                "threads": Math.ceil(this.total/250),
+                "charactersPerThread": 250,
                 "intervalMilliseconds": 0,
                 "callbackDelayMilliseconds": 0,
                 "renderEventName": "mb_charUpdated",
@@ -436,6 +436,11 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
                 "callback": ""
             };
             Box.extend(opt, options);
+
+            /* figure out how many threads we want */
+            if (opt.threads === undefined) {
+                opt.threads = Math.ceil(this.total/opt.charactersPerThread);
+            }
 
             /*
              * event listener to render display on buffer update
