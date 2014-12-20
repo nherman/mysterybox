@@ -305,6 +305,14 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
      * Instance Methods
      */
 
+    /*
+     * render
+     * push changes in the buffer to DOM
+     */
+    Box.prototype.render = function() {
+        this.domElm.innerHTML = this.buffer.replace('<','&lt;').replace('>','&gt;');
+    }
+
     /* 
      * trigger
      * dispatch an event
@@ -312,7 +320,6 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
     Box.prototype.trigger = function(eventName) {
         this.domElm.dispatchEvent(Box.events[eventName]);
     };
-
 
     /*
      * initMsg
@@ -350,24 +357,26 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
     }
 
     /*
-     * render
-     * push changes in the buffer to DOM
-     */
-    Box.prototype.render = function() {
-        this.domElm.innerHTML = this.buffer.replace('<','&lt;').replace('>','&gt;');
-    }
-
-    /*
      * renderMsg
      * resolve entire buffer instantly
      */
-    Box.prototype.renderMsg = function() {
-        var i = 0;
+    Box.prototype.renderMsg = function(options) {
+        var self = this,
+            i = 0,
+            opt = {
+                "callbackDelayMilliseconds": 0,
+                "callback": ""
+            };
+        Box.extend(opt, options);
+
         this.buffer = "";
         for(;i<this.msgBuffer.length;i++) {
             this.buffer += this.msgBuffer[i];
         }
         this.render();
+
+        /* execute callback function */
+        Box.callback(opt);
     }
 
     /*
