@@ -82,9 +82,13 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
                 }
             }
 
-            /* initialize arrays */
+            /* initialize arrays
+             * Originally this populated msgBuffer with space characters (\u0020). However, Safari7.1 seems to
+             * collapse leading spaces in blocks where the white-space style is set to 'pre-wrap.' Switching
+             * to non-breaking space characters (\u00A0) seems to be a less fragile alternative.
+             */
             for (var i=0;i<mb.total;i++) {
-                mb.msgBuffer[i] = "\u0020";
+                mb.msgBuffer[i] = "\u00A0";
             }
 
             if (preserve_whitespace) {
