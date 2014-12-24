@@ -256,12 +256,23 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
         init, message updated, character updated, all characters updated
     */
     Box.events = {
-        /* do event constructors work in newer version of IE? */
+        
+        "mb_charUpdated": document.createEvent("CustomEvent"),
+        "mb_allCharsUpdated": document.createEvent("CustomEvent"),
+        "mb_init": document.createEvent("CustomEvent"),
+        "mb_init_msg": document.createEvent("CustomEvent")
+
+        /* do event constructors work in newer version of IE? 
         "mb_charUpdated": new Event('mb_charUpdated'),
         "mb_allCharsUpdated": new Event('mb_allCharsUpdated'),
         "mb_init": new Event('mb_init'),
         "mb_init_msg": new Event('mb_init_msg')
+        */
     };
+    Box.events.mb_charUpdated.initEvent('mb_charUpdated',false,true);
+    Box.events.mb_allCharsUpdated.initEvent('mb_allCharsUpdated',false,true);
+    Box.events.mb_init.initEvent('mb_init',false,true);
+    Box.events.mb_init_msg.initEvent('mb_init_msg',false,true);
 
     /* 
         Extend: helper function for copying parameters from one object to another.
