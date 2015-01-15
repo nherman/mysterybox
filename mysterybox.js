@@ -164,7 +164,8 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
         var 
             elmStyle,
             charDimension = {'w':8.4,'h':17},
-            elmDimension = {'x':0,'y':0};
+            elmDimension = {'x':0,'y':0},
+            userAgent = window.navigator.userAgent;
 
         this.options = {
             msgLineMaxWidth: 80,
@@ -194,7 +195,29 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
          * http://jsbin.com/bulletproof-responsive-pre/2/edit
          */
         this.domElm.style.cssText += this.options.cssText;
-        this.domElm.style.cssText += "display:block;unicode-bidi:embed;word-break:break-all;word-wrap:break-word;white-space:pre;white-space: -moz-pre-wrap;white-space:pre-wrap;";
+        this.domElm.style.cssText += "display:block;unicode-bidi:embed;word-break:break-all;word-wrap:break-word;white-space:pre;white-space: -moz-pre-wrap;";
+
+
+        /* pre or pre-wrap?
+           IE's implementation of pre-wrap is very picky about non-breaking
+           spaces. It will insert a break ahead of the last character in a
+           line that is not \u00A0. Other browser will maximize the number of
+           characters in each line.
+
+           Switching CSS white-space to "pre" for IE only seems to fix the
+           issue. Sadly, other browsers don't render proprely using pre.
+           Rather than re-factor the renderer to force line-breaks in the 
+           right places I'm choosing to insert this litle hack.
+
+           I couldn't figure out how to detect this issue directly so I'm
+           forced to test for the IE user-agent string. <sad face> I've only
+           tested this in IE11 so it's possible I'm breaking things on older
+           versions <shrug>
+         */
+
+        if (userAgent.indexOf("MSIE ") == -1 && userAgent.indexOf("Trident/") == -1) {
+            this.domElm.style.cssText += "white-space:pre-wrap;"
+        }
 
         /*
          * Get box size
@@ -262,12 +285,6 @@ window.MYSTERYBOX = window.MYSTERYBOX || (function() {
         "mb_init": document.createEvent("CustomEvent"),
         "mb_init_msg": document.createEvent("CustomEvent")
 
-        /* do event constructors work in newer version of IE? 
-        "mb_charUpdated": new Event('mb_charUpdated'),
-        "mb_allCharsUpdated": new Event('mb_allCharsUpdated'),
-        "mb_init": new Event('mb_init'),
-        "mb_init_msg": new Event('mb_init_msg')
-        */
     };
     Box.events.mb_charUpdated.initEvent('mb_charUpdated',false,true);
     Box.events.mb_allCharsUpdated.initEvent('mb_allCharsUpdated',false,true);
